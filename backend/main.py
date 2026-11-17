@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.db import engine
 from core.models import Base, Job
 from data_collection.router import router as data_collection_router
+from data_filtering.synthetic_router import start_synthetic_workers, stop_synthetic_workers
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,6 +18,7 @@ logger = logging.getLogger("job_scraper")
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown events."""
     try:
+        start_synthetic_workers(num_workers=2)
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database tables initialized successfully.")
@@ -26,6 +28,7 @@ async def lifespan(app: FastAPI):
             exc
         )
     yield
+    await stop_synthetic_workers()
     try:
         await engine.dispose()
         logger.info("Database connection pool disposed.")

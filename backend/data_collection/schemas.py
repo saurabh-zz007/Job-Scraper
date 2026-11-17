@@ -45,10 +45,4 @@ class RawJob(BaseModel):
         return v.strip()
 
 
-class JobCollectionResponse(BaseModel):
-    status: str
-    attempted: int
-    inserted: int
-    ignored: int
-
 

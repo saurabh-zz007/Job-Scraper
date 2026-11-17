@@ -2,14 +2,15 @@ import asyncio
 import hashlib
 import logging
 from typing import Any
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import Job
 from data_collection.scrapers.base import BaseScraper
 from data_collection.scrapers.greenhouse import GreenhouseScraper
 from data_collection.scrapers.lever import LeverScraper
 from data_collection.schemas import RawJob
+
+# TODO: Replace it with Redis Queue
+from data_filtering.synthetic_router import enqueue_job
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,6 @@ def get_default_scrapers() -> list[BaseScraper]:
     ]
 
 async def run_collection_pipeline(
-    db_session: AsyncSession,
     scrapers: list[BaseScraper] | None = None
 ) -> dict[str, Any]:
     """
@@ -74,7 +74,6 @@ async def run_collection_pipeline(
 
     # Prepare raw dictionary payloads matching the Job SQLAlchemy model
     job_columns = set(Job.__table__.columns.keys())
-    valid_jobs_data: list[dict[str, Any]] = []
 
     for job in flat_jobs:
         job_dict = job.model_dump()
@@ -86,33 +85,9 @@ async def run_collection_pipeline(
  
         # Filter strictly by Job model columns to avoid Unconsumed column errors
         clean_row = {k: v for k, v in job_dict.items() if k in job_columns}
-        valid_jobs_data.append(clean_row)
+        enqueue_job(clean_row)
 
-    # Execute bulk database insert with PostgreSQL ON CONFLICT DO NOTHING
-    stmt = (
-        insert(Job)
-        .values(valid_jobs_data)
-        .on_conflict_do_nothing(index_elements=["source_url"])
-        .returning(Job.id)
-    )
+    return {"status": "Jobs queued for processing"}
 
-    result = await db_session.execute(stmt)
-    inserted_count = len(result.scalars().all())
-
-    await db_session.commit()
-
-    ignored_count = attempted_count - inserted_count
-    logger.info(
-        "Collection pipeline complete: attempted=%d, inserted=%d, ignored=%d",
-        attempted_count,
-        inserted_count,
-        ignored_count
-    )
-
-    return {
-        "status": "success",
-        "attempted": attempted_count,
-        "inserted": inserted_count,
-        "ignored": ignored_count
-    }
+    
 

@@ -1,10 +1,8 @@
 from typing import Any
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, status, BackgroundTasks
 
-from core.db import get_db
 from data_collection.pipeline import run_collection_pipeline
-from data_collection.schemas import JobCollectionResponse, CollectionTriggerRequest
+from data_collection.schemas import CollectionTriggerRequest
 from data_collection.scrapers.base import BaseScraper
 from data_collection.scrapers.greenhouse import GreenhouseScraper
 from data_collection.scrapers.lever import LeverScraper
@@ -14,7 +12,6 @@ router = APIRouter(prefix="/jobs", tags=["Data Collection"])
 
 @router.post(
     "/collect",
-    response_model=JobCollectionResponse,
     status_code=status.HTTP_200_OK,
     summary="Trigger Job Data Collection Pipeline",
     description=(
@@ -24,8 +21,8 @@ router = APIRouter(prefix="/jobs", tags=["Data Collection"])
     )
 )
 async def collect_jobs_endpoint(
+    background_tasks: BackgroundTasks,
     payload: CollectionTriggerRequest | None = None,
-    db: AsyncSession = Depends(get_db)
 ) -> dict[str, Any]:
     """
     HTTP endpoint to trigger the job ingestion pipeline.
@@ -41,5 +38,5 @@ async def collect_jobs_endpoint(
             for board in payload.lever_boards:
                 custom_scrapers.append(LeverScraper(board_id=board))
 
-    summary = await run_collection_pipeline(db_session=db, scrapers=custom_scrapers)
-    return summary
+    background_tasks.add_task(run_collection_pipeline, custom_scrapers)
+    return {"status": "Collection started"}
