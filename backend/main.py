@@ -5,8 +5,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from core.db import engine
 from core.models import Base, Job
+from api.router import api_router
+from admin.router import router as admin_router
 from data_collection.router import router as data_collection_router
 from data_filtering.synthetic_router import start_synthetic_workers, stop_synthetic_workers
+from llm_tagging.synthetic_router import (
+    start_synthetic_LLM_workers, 
+    stop_synthetic_LLM_workers,
+    recover_pending_llm_jobs
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -18,10 +25,18 @@ logger = logging.getLogger("job_scraper")
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown events."""
     try:
-        start_synthetic_workers(num_workers=2)
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database tables initialized successfully.")
+        start_synthetic_workers(num_workers=2)
+        start_synthetic_LLM_workers(num_workers=3)
+
+        recovered_count = await recover_pending_llm_jobs()
+        if recovered_count > 0:
+            logger.info("Successfully recovered %d orphaned RAW jobs into the LLM queue.", recovered_count)
+        else:
+            logger.info("No orphaned RAW jobs found in database.")
+            
     except Exception as exc:
         logger.warning(
             "Could not connect to database on startup (tables not auto-created): %s",
@@ -29,6 +44,7 @@ async def lifespan(app: FastAPI):
         )
     yield
     await stop_synthetic_workers()
+    await stop_synthetic_LLM_workers()
     try:
         await engine.dispose()
         logger.info("Database connection pool disposed.")
@@ -50,8 +66,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register data collection router under both prefixes for flexible routing
+# Register API routes under /api/v1 and /api/admin
+app.include_router(api_router, prefix="/api/v1")
 app.include_router(data_collection_router, prefix="/api/v1")
+app.include_router(data_collection_router)
+app.include_router(admin_router, prefix="/api/admin")
+app.include_router(admin_router, prefix="/admin")
 
 @app.get("/", tags=["Health"])
 async def root():

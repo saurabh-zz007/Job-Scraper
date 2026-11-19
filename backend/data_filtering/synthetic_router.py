@@ -1,6 +1,7 @@
 import logging
 import asyncio
 
+from typing import Any
 from sqlalchemy.dialects.postgresql import insert
 
 from core.db import AsyncSessionLocal
@@ -15,9 +16,8 @@ logger = logging.getLogger(__name__)
 _filter_queue = asyncio.Queue()
 _worker_tasks: list[asyncio.Task] = []
 
-def enqueue_job(job_data):
+def enqueue_job(job_data: dict[str, Any]):
     _filter_queue.put_nowait(job_data)
-
 
 async def _synthetic_worker(worker_id: int)-> None:
     logger.info("Synthetic filtering worker-%d ready", worker_id)

@@ -1,7 +1,7 @@
 import re
 import logging
 
-from sqlalchemy import select, and_
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import Job
@@ -63,8 +63,8 @@ class Filtering:
 
 
     def _deterministic_filter(self, job_data)-> bool|None:
-        title = job_data.get("raw_title")
-        description = job_data.get("description")
+        title = job_data.get("raw_title") or ""
+        description = job_data.get("description") or ""
 
         if self._title_exclude_pattern.search(title):
             return False
@@ -91,20 +91,11 @@ class Filtering:
         raw_title = job_data.get("raw_title")
         raw_location = job_data.get("raw_location")
 
-        conditions = []
-        if source_url:
-            conditions.append(Job.source_url == source_url)
-        if company_name:
-            conditions.append(Job.company_name == company_name)
-        if raw_title:
-            conditions.append(Job.raw_title == raw_title)
-        if raw_location:
-            conditions.append(Job.raw_location == raw_location)
+        conditions = [Job.source_url == source_url]
+        if content_hash := job_data.get("content_hash"):
+            conditions.append(Job.content_hash == content_hash)
 
-        if not conditions:
-            return False
-
-        stmt = select(Job.id).where(and_(*conditions)).limit(1)
+        stmt = select(Job.id).where(or_(*conditions)).limit(1)
         result = await self.db_session.execute(stmt)
 
         return result.scalar_one_or_none() is not None
