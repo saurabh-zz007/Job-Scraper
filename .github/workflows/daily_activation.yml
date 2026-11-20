@@ -1,0 +1,26 @@
+name: Daily Job Activation Pipeline
+
+on:
+  schedule:
+    # Runs daily at 02:00 AM IST (20:30 UTC)
+    - cron: "30 20 * * *"
+  workflow_dispatch: {} # Lets you trigger it manually from the Actions tab anytime
+
+jobs:
+  trigger-collection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up and check backend /health
+        run: |
+          curl -fsS --max-time 60 "${{ secrets.BACKEND_BASE_URL }}/health"
+          echo "Health check succeeded."
+
+      - name: Wait 2 minutes for service stabilization
+        run: sleep 120
+
+      - name: Trigger paced data collection
+        run: |
+          curl -fsS --fail-with-body \
+            -X POST "${{ secrets.BACKEND_BASE_URL }}/activation/trigger?rate_per_minute=2.0" \
+            -H "x-trigger-secret: ${{ secrets.ACTIVATION_TRIGGER_SECRET }}"
+          echo "Collection job triggered."
