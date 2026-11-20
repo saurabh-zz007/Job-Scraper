@@ -113,40 +113,6 @@ class JobDetailModal extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    if (job.classificationConfidence != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.aiBadgeLight,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: AppTheme.aiBadge.withValues(alpha: 0.25),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.auto_awesome,
-                              size: 12,
-                              color: AppTheme.aiBadge,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              job.formattedConfidence,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.aiBadge,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                   ],
                 ),
                 if (onClose != null)

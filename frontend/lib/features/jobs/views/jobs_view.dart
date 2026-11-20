@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../core/config/env_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../viewmodels/jobs_viewmodel.dart';
 import '../widgets/job_card.dart';
@@ -428,8 +429,8 @@ class JobsView extends GetView<JobsViewModel> {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          SizedBox(
+        children: [
+          const SizedBox(
             width: 40,
             height: 40,
             child: CircularProgressIndicator(
@@ -437,8 +438,8 @@ class JobsView extends GetView<JobsViewModel> {
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
-          SizedBox(height: 18),
-          Text(
+          const SizedBox(height: 18),
+          const Text(
             'Connecting to Server...',
             style: TextStyle(
               fontSize: 16,
@@ -446,10 +447,10 @@ class JobsView extends GetView<JobsViewModel> {
               color: AppTheme.textPrimary,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
-            'Fetching live tech jobs from FastAPI backend (http://127.0.0.1:8000)...',
-            style: TextStyle(
+            'Fetching live tech jobs from FastAPI backend (${EnvConfig.apiBaseUrl})...',
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w400,
               color: AppTheme.textSecondary,
@@ -506,7 +507,7 @@ class JobsView extends GetView<JobsViewModel> {
             Text(
               controller.errorMessage.value.isNotEmpty
                   ? controller.errorMessage.value
-                  : 'Could not connect to FastAPI server at http://127.0.0.1:8000.',
+                  : 'Could not connect to FastAPI server at ${EnvConfig.apiBaseUrl}.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 13,

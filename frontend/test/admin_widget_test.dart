@@ -79,11 +79,12 @@ void main() {
     expect(find.text('Admin Operations Console'), findsOneWidget);
     expect(find.text('Sign Out'), findsOneWidget);
 
-    // Verify Control Bar Badges & Buttons
-    expect(find.text('Pipeline Idle'), findsOneWidget);
-    expect(find.text('LLM Queue: 3'), findsOneWidget);
-    expect(find.text('Run Full Pipeline'), findsOneWidget);
-    expect(find.text('Retry All Failed'), findsOneWidget);
+    // Verify Control Bar Refresh Controls
+    expect(find.text('Live Telemetry & Controls'), findsOneWidget);
+    expect(find.text('Auto (15s)'), findsOneWidget);
+    expect(find.text('Refresh'), findsOneWidget);
+    expect(find.text('Pipeline Idle'), findsNothing);
+    expect(find.text('Run Full Pipeline'), findsNothing);
 
     // Verify KPI Cards
     expect(find.text('PIPELINE FUNNEL'), findsOneWidget);

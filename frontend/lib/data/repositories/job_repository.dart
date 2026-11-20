@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get_connect/connect.dart';
+import '../../core/config/env_config.dart';
 import '../models/job_model.dart';
 
 abstract class JobRepository {
@@ -12,9 +13,9 @@ class ApiJobRepository extends GetConnect implements JobRepository {
   final String serverUrl;
 
   ApiJobRepository({String? serverUrl})
-      : serverUrl = serverUrl ?? 'http://127.0.0.1:8000' {
+      : serverUrl = serverUrl ?? EnvConfig.apiBaseUrl {
     httpClient.baseUrl = this.serverUrl;
-    httpClient.timeout = const Duration(seconds: 8);
+    httpClient.timeout = const Duration(seconds: 12);
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get_connect/connect.dart';
+import '../../core/config/env_config.dart';
 import '../models/admin_models.dart';
 
 abstract class AdminRepository {
@@ -30,7 +31,7 @@ class ApiAdminRepository extends GetConnect implements AdminRepository {
   final String serverUrl;
 
   ApiAdminRepository({String? serverUrl})
-      : serverUrl = serverUrl ?? 'http://127.0.0.1:8000' {
+      : serverUrl = serverUrl ?? EnvConfig.apiBaseUrl {
     httpClient.baseUrl = this.serverUrl;
     httpClient.timeout = const Duration(seconds: 12);
   }

@@ -238,6 +238,19 @@ OTHER_KEY=12345
       expect(EnvConfig.get('OTHER_KEY'), '12345');
     });
 
+    test('EnvConfig apiBaseUrl supports BASE_URL and strips trailing slashes', () {
+      EnvConfig.parse('''
+BASE_URL=https://job-scraper-z5uo.onrender.com/
+''');
+      expect(EnvConfig.apiBaseUrl, 'https://job-scraper-z5uo.onrender.com');
+
+      EnvConfig.parse('''
+# BASE_URL=https://job-scraper-z5uo.onrender.com
+BASE_URL=http://127.0.0.1:8000
+''');
+      expect(EnvConfig.apiBaseUrl, 'http://127.0.0.1:8000');
+    });
+
     test('AdminViewModel login authenticates valid admin and rejects invalid', () {
       EnvConfig.setMockValues({'ADMIN_USERNAME': 'admin', 'ADMIN_PASSWORD': 'admin'});
       final vm = AdminViewModel(repository: mockRepo);

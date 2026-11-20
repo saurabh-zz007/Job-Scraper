@@ -15,6 +15,7 @@ class EnvConfig {
       // Fallback defaults if asset is not loaded (e.g., in unit tests)
       _env['ADMIN_USERNAME'] = 'admin';
       _env['ADMIN_PASSWORD'] = 'admin';
+      _env['BASE_URL'] = 'http://127.0.0.1:8000';
     } finally {
       _isInitialized = true;
     }
@@ -41,6 +42,14 @@ class EnvConfig {
 
   static String get adminUsername => _env['ADMIN_USERNAME'] ?? 'admin';
   static String get adminPassword => _env['ADMIN_PASSWORD'] ?? 'admin';
+
+  static String get apiBaseUrl {
+    var url = _env['BASE_URL'] ?? _env['API_BASE_URL'] ?? 'http://127.0.0.1:8000';
+    if (url.endsWith('/')) {
+      url = url.substring(0, url.length - 1);
+    }
+    return url;
+  }
 
   static String? get(String key) => _env[key];
 
