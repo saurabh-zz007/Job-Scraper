@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/job_model.dart';
 import '../viewmodels/jobs_viewmodel.dart';
+import 'formatted_job_description.dart';
 
 class JobDetailModal extends StatelessWidget {
   final JobModel job;
@@ -357,8 +358,8 @@ class JobDetailModal extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
 
-                // Styled Description Text
-                _buildDescriptionContent(job.description),
+                // Styled Meaningful Description Text
+                FormattedJobDescription(description: job.description),
 
                 const SizedBox(height: 20),
               ],
@@ -432,79 +433,6 @@ class JobDetailModal extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDescriptionContent(String text) {
-    // Render clean formatted markdown-style headers, bullet points and paragraphs
-    final lines = text.split('\n');
-    final widgets = <Widget>[];
-
-    for (final rawLine in lines) {
-      final line = rawLine.trim();
-      if (line.isEmpty) {
-        widgets.add(const SizedBox(height: 10));
-      } else if (line.startsWith('### ')) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 6),
-            child: Text(
-              line.replaceFirst('### ', ''),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-          ),
-        );
-      } else if (line.startsWith('- ') || line.startsWith('* ')) {
-        final bulletText = line.substring(2).trim();
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '• ',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    bulletText,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      height: 1.5,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      } else {
-        widgets.add(
-          Text(
-            line,
-            style: const TextStyle(
-              fontSize: 13.5,
-              height: 1.55,
-              color: AppTheme.textSecondary,
-            ),
-          ),
-        );
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
     );
   }
 

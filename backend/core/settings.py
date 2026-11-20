@@ -11,5 +11,7 @@ class Settings(BaseSettings):
     LLM_INPUT_COST_PER_1M: float
     LLM_OUTPUT_COST_PER_1M: float
 
+    ACTIVATION_TRIGGER_SECRET:str
+
 
 settings = Settings() #type:ignore

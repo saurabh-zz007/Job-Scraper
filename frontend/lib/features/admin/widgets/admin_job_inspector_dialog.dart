@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/admin_models.dart';
+import '../../jobs/widgets/formatted_job_description.dart';
 import '../viewmodels/admin_viewmodel.dart';
 
 class AdminJobInspectorDialog extends StatefulWidget {
@@ -672,22 +673,17 @@ class _AdminJobInspectorDialogState extends State<AdminJobInspectorDialog>
   Widget _buildDescriptionTab(AdminJobDetailModel job) {
     return Container(
       margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.surfaceMuted,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppTheme.border),
       ),
       child: SingleChildScrollView(
-        child: SelectableText(
-          job.description.isNotEmpty
+        child: FormattedJobDescription(
+          description: job.description.isNotEmpty
               ? job.description
               : 'No raw description available.',
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppTheme.textPrimary,
-            height: 1.6,
-          ),
         ),
       ),
     );

@@ -60,12 +60,77 @@ class Filtering:
             r"\b(?:senior|sr\.?|lead|principal|staff|manager|director|vp|vice\s+president|head\s+of|architect|executive|counsel|phd|[3-9]\+?\s*years)\b",
             re.IGNORECASE,
         )
+        self._remote_pattern = re.compile(
+            r"""
+            \b(?:
+                remote |
+                work\s+from\s+home |
+                wfh |
+                distributed |
+                anywhere\s*\(?(?:remote|worldwide|global)?\)?
+            )\b
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
+
+        # India country, states, and major hiring hubs
+        self._india_pattern = re.compile(
+            r"""
+            \b(?:
+                india |
+                bengaluru |
+                bangalore |
+                hyderabad |
+                pune |
+                mumbai |
+                bombay |
+                gurugram |
+                gurgaon |
+                noida |
+                new\s+delhi |
+                delhi(?:\s+ncr)? |
+                ncr |
+                chennai |
+                madras |
+                kolkata |
+                ahmedabad |
+                jaipur |
+                kochi |
+                cochin |
+                indore |
+                chandigarh |
+                coimbatore |
+                karnataka |
+                maharashtra |
+                telangana |
+                tamil\s+nadu |
+                uttar\s+pradesh |
+                gujarat |
+                west\s+bengal |
+                kerala
+            )\b
+            """,
+            re.IGNORECASE | re.VERBOSE,
+        )
 
 
     def _deterministic_filter(self, job_data)-> bool|None:
         title = job_data.get("raw_title") or ""
         description = job_data.get("description") or ""
+        raw_location = job_data.get("raw_location") or ""
 
+        if isinstance(raw_location, (list, tuple, set)):
+            location = " ; ".join(str(x) for x in raw_location if x)
+        else:
+            location = str(raw_location or "")
+
+        remote_haystack = f"{location} | {title}"
+
+        is_remote = bool(self._remote_pattern.search(remote_haystack))
+        is_india = bool(self._india_pattern.search(location))
+
+        if not is_remote and not is_india:
+            return False
         if self._title_exclude_pattern.search(title):
             return False
 

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:frontend/core/config/env_config.dart';
 import 'package:frontend/data/models/admin_models.dart';
 import 'package:frontend/data/repositories/admin_repository.dart';
 import 'package:frontend/features/admin/viewmodels/admin_viewmodel.dart';
@@ -212,14 +213,49 @@ void main() {
 
   setUp(() {
     Get.reset();
+    EnvConfig.setMockValues({'ADMIN_USERNAME': 'admin', 'ADMIN_PASSWORD': 'admin'});
     mockRepo = MockAdminRepository();
     Get.put<AdminRepository>(mockRepo);
     viewModel = AdminViewModel(repository: mockRepo);
+    viewModel.isAuthenticated.value = true;
   });
 
   tearDown(() {
     viewModel.onClose();
     Get.reset();
+  });
+
+  group('Admin Authentication & EnvConfig Tests', () {
+    test('EnvConfig parses key value pairs from string', () {
+      EnvConfig.parse('''
+# Comment line
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD='secretpassword'
+OTHER_KEY=12345
+''');
+      expect(EnvConfig.adminUsername, 'admin');
+      expect(EnvConfig.adminPassword, 'secretpassword');
+      expect(EnvConfig.get('OTHER_KEY'), '12345');
+    });
+
+    test('AdminViewModel login authenticates valid admin and rejects invalid', () {
+      EnvConfig.setMockValues({'ADMIN_USERNAME': 'admin', 'ADMIN_PASSWORD': 'admin'});
+      final vm = AdminViewModel(repository: mockRepo);
+
+      expect(vm.isAuthenticated.value, isFalse);
+      final failed = vm.login('wrong', 'admin');
+      expect(failed, isFalse);
+      expect(vm.isAuthenticated.value, isFalse);
+      expect(vm.authError.value, isNotNull);
+
+      final success = vm.login('admin', 'admin');
+      expect(success, isTrue);
+      expect(vm.isAuthenticated.value, isTrue);
+      expect(vm.authError.value, isNull);
+
+      vm.logout();
+      expect(vm.isAuthenticated.value, isFalse);
+    });
   });
 
   group('Admin Model Serialization Tests', () {

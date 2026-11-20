@@ -8,6 +8,7 @@ from core.models import Base, Job
 from api.router import api_router
 from admin.router import router as admin_router
 from data_collection.router import router as data_collection_router
+from activation_pipeline.router import router as activation_router
 from data_filtering.synthetic_router import start_synthetic_workers, stop_synthetic_workers
 from llm_tagging.synthetic_router import (
     start_synthetic_LLM_workers, 
@@ -68,10 +69,9 @@ app.add_middleware(
 
 # Register API routes under /api/v1 and /api/admin
 app.include_router(api_router, prefix="/api/v1")
-app.include_router(data_collection_router, prefix="/api/v1")
-app.include_router(data_collection_router)
+app.include_router(data_collection_router, prefix="/api/collection")
 app.include_router(admin_router, prefix="/api/admin")
-app.include_router(admin_router, prefix="/admin")
+app.include_router(activation_router, prefix="/api/collection")
 
 @app.get("/", tags=["Health"])
 async def root():

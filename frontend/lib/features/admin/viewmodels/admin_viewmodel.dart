@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/env_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/admin_models.dart';
 import '../../../data/repositories/admin_repository.dart';
@@ -12,6 +13,10 @@ class AdminViewModel extends GetxController {
 
   AdminViewModel({AdminRepository? repository})
     : _repository = repository ?? Get.find<AdminRepository>();
+
+  // Authentication State
+  final isAuthenticated = false.obs;
+  final authError = RxnString();
 
   // State Observables
   final metrics = Rxn<DashboardMetricsModel>();
@@ -67,10 +72,36 @@ class AdminViewModel extends GetxController {
   bool get isBatchRunning => metrics.value?.pipelineLive.batchRunning ?? false;
   int get llmQueueDepth => metrics.value?.pipelineLive.llmQueueDepth ?? 0;
 
+  bool login(String username, String password) {
+    final expectedUser = EnvConfig.adminUsername;
+    final expectedPass = EnvConfig.adminPassword;
+
+    if (username.trim() == expectedUser && password == expectedPass) {
+      isAuthenticated.value = true;
+      authError.value = null;
+      refreshAll();
+      return true;
+    } else {
+      authError.value = 'Invalid administrator credentials.';
+      return false;
+    }
+  }
+
+  void logout() {
+    isAuthenticated.value = false;
+    authError.value = null;
+    if (isAutoPolling.value) {
+      isAutoPolling.value = false;
+      _pollTimer?.cancel();
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
-    refreshAll();
+    if (isAuthenticated.value) {
+      refreshAll();
+    }
   }
 
   @override
@@ -101,6 +132,7 @@ class AdminViewModel extends GetxController {
   }
 
   Future<void> refreshAll({bool silent = false}) async {
+    if (!isAuthenticated.value) return;
     await Future.wait([
       fetchDashboard(silent: silent),
       fetchJobs(page: currentPage.value, silent: silent),
